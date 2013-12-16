@@ -151,15 +151,11 @@ class PhoneDetails {
     }
 
 }
-$string = "422";
-
-var_dump(filter_var($string, FILTER_VALIDATE_REGEXP,
-array("options"=>array("regexp"=>"/^\d+$/"))));
-$format = 
-var_dump(filter_var($string, FILTER_VALIDATE_REGEXP,
-array("options"=>array("regexp"=>"/^\d+$/"))));
-
-
-$service = new PhoneDetails();
+//Sanitize PN (digits only)
+$phoneNumber = (isset($_GET['phone_number']))?filter_var($_GET['phone_number'], FILTER_VALIDATE_REGEXP,
+array("options"=>array("regexp"=>"/^\d+$/"))):null;
+//Sanitize format ('html' or 'json')
+$format = (isset($_GET['format']))?filter_var($_GET['format'], FILTER_VALIDATE_REGEXP,
+array("options"=>array("regexp"=>"/^(html|json)$/"))):null;
+$service = new PhoneDetails($phoneNumber,$format);
 $service->render('60123691200');
-?>
