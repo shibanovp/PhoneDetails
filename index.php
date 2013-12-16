@@ -1,5 +1,7 @@
 <?php
+
 class PhoneDetails {
+
     /**
      * Database configuration
      */
@@ -9,6 +11,8 @@ class PhoneDetails {
     private $_db;
 
     public function render($strPhoneNumber, $format = 'html') {
+        if (empty($strPhoneNumber))
+            return $this->sendData($this->getCompletePhoneDetailes());
         $countryCode = substr($strPhoneNumber, 0, 2);
         // Determine region name by the 3rd digit
         $regionCode = substr($strPhoneNumber, 2, 1);
@@ -65,40 +69,73 @@ class PhoneDetails {
 
     private function sendData($data, $format = 'html') {
         // Determine the format needed and generate
+        //var_dump($data);
         switch ($format) {
             case 'html':
-                $out = '';
-                foreach ($data as $key => $value)
-                    $out.= '<div>' . $this->ucwString($key) . ": $value" . '</div>' . PHP_EOL;
+                $out = $table= '';
+                if (count($data, COUNT_RECURSIVE)/count($data)>1){
+                    foreach ($data as $row){
+                        $table.='<tr>';
+                        foreach ($row as $item)
+                            $table.="<td>$item</td>";
+                        $table.='</tr>';
+                }}
+                else{
+                    foreach ($data as $key => $value)
+                        $out.= '<div>' . $this->ucwString($key) . ": $value" . '</div>' . PHP_EOL;
+                }
                 $html = "
-                        <!DOCTYPE html>
-                        <html>
-                            <head>
-                                <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css'>
-                                <meta charset='UTF-8'>
-                                <title>Phone Details</title>
-                                <style>
-                                    .jumbotron{
-                                        text-align:center;
-                                    }
-                                    .col-md-4>div{
-                                    font-size: 2em;
-                                    }
-                                </style>
-                            </head>
-                            <body>
-                            <div class='jumbotron'>
-  <h1>Phone Detailes</h1>
-</div>
-<div class='container'>
-<div class='col-md-4'>&nbsp;</div>
-<div class='col-md-4'>
-                                " . $out . "
-                                    </div>
-<div class='col-md-4'>&nbsp;</div>
-                                    </div>
-                            </body>
-                        </html>";
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css'>
+        <meta charset='UTF-8'>
+        <title>Phone Details</title>
+        <style>
+            .jumbotron{
+                text-align:center;
+            }
+            .col-md-4>div{
+                font-size: 1.5em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class='jumbotron'>
+            <h1>Phone Detailes</h1>
+        </div>
+        <div class='container'>
+            <div class='col-md-4'>&nbsp;</div>
+            <div class='col-md-4'>
+                " . $out . "
+                <h2>New request:</h2>                  
+                <form action=''>
+                    <input type='text' name='phone_number' class='form-control' placeholder='Type phone number'>
+                    <div class='radio'>
+                        <label>
+                            <input type='radio' name='format' id='optionsRadios1' value='html' checked>
+                            HTML
+                        </label>
+                    </div>
+                    <div class='radio'>
+                        <label>
+                            <input type='radio' name='format' id='optionsRadios2' value='json'>
+                            JSON
+                        </label>
+                    </div>
+                    <button type='submit' class='btn btn-default'>Submit</button>
+                </form>
+            </div>
+            <div class='col-md-4'>&nbsp;</div>
+            <div class='col-md-12'>
+                <table class='table'>
+                ".$table."
+                </table>
+            
+            </div>
+        </div>
+    </body>
+</html>";
                 echo $html;
                 break;
             case 'json':
@@ -139,9 +176,6 @@ class PhoneDetails {
             INSERT INTO `phone_details` (`phone_number`, `status`, `telco`, `customer_name`, `last_payment_date`, `last_payment_amount`) VALUES('60198550000',        100,    'CELCOM',       'Abdullah Hukum',       '2013-09-18',   50);
             INSERT INTO `phone_details` (`phone_number`, `status`, `telco`, `customer_name`, `last_payment_date`, `last_payment_amount`) VALUES('6527508888',         100,    'SINGTEL',      'Richard Ooi',  '2013-09-18',   60);";
         $this->executeStatement($sql);
-        $q = "SELECT * from `phone_details`";
-        $res = $db->query($q);
-        $result = $res->fetchAll(PDO::FETCH_ASSOC);
     }
 
     private function executeStatement($sql) {
@@ -152,6 +186,13 @@ class PhoneDetails {
             echo $e->getMessage();
             die();
         }
+    }
+    private function getCompletePhoneDetailes(){
+        $db= $this->getDb();
+        $q = "SELECT * from `phone_details`";
+        $res = $db->query($q);
+        $result = $res->fetchAll(PDO::FETCH_ASSOC);
+        return $result;
     }
 
     private function getDb() {
@@ -165,12 +206,12 @@ class PhoneDetails {
         }
         return $this->_db;
     }
+
 }
+
 //Sanitize PN (digits only)
-$phoneNumber = (isset($_GET['phone_number']))?filter_var($_GET['phone_number'], FILTER_VALIDATE_REGEXP,
-array("options"=>array("regexp"=>"/^\d+$/"))):null;
+$phoneNumber = (isset($_GET['phone_number'])) ? filter_var($_GET['phone_number'], FILTER_VALIDATE_REGEXP, array("options" => array("regexp" => "/^\d+$/"))) : null;
 //Sanitize format ('html' or 'json')
-$format = (isset($_GET['format']))?filter_var($_GET['format'], FILTER_VALIDATE_REGEXP,
-array("options"=>array("regexp"=>"/^(html|json)$/"))):null;
+$format = (isset($_GET['format'])) ? filter_var($_GET['format'], FILTER_VALIDATE_REGEXP, array("options" => array("regexp" => "/^(html|json)$/"))) : null;
 $service = new PhoneDetails();
-$service->render($phoneNumber,$format);
+$service->render($phoneNumber, $format);
