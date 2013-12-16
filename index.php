@@ -1,7 +1,5 @@
 <?php
-
 class PhoneDetails {
-
     /**
      * Database configuration
      */
@@ -76,11 +74,29 @@ class PhoneDetails {
                         <!DOCTYPE html>
                         <html>
                             <head>
+                                <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css'>
                                 <meta charset='UTF-8'>
                                 <title>Phone Details</title>
+                                <style>
+                                    .jumbotron{
+                                        text-align:center;
+                                    }
+                                    .col-md-4>div{
+                                    font-size: 2em;
+                                    }
+                                </style>
                             </head>
                             <body>
+                            <div class='jumbotron'>
+  <h1>Phone Detailes</h1>
+</div>
+<div class='container'>
+<div class='col-md-4'>&nbsp;</div>
+<div class='col-md-4'>
                                 " . $out . "
+                                    </div>
+<div class='col-md-4'>&nbsp;</div>
+                                    </div>
                             </body>
                         </html>";
                 echo $html;
@@ -149,7 +165,6 @@ class PhoneDetails {
         }
         return $this->_db;
     }
-
 }
 //Sanitize PN (digits only)
 $phoneNumber = (isset($_GET['phone_number']))?filter_var($_GET['phone_number'], FILTER_VALIDATE_REGEXP,
@@ -157,5 +172,5 @@ array("options"=>array("regexp"=>"/^\d+$/"))):null;
 //Sanitize format ('html' or 'json')
 $format = (isset($_GET['format']))?filter_var($_GET['format'], FILTER_VALIDATE_REGEXP,
 array("options"=>array("regexp"=>"/^(html|json)$/"))):null;
-$service = new PhoneDetails($phoneNumber,$format);
-$service->render('60123691200');
+$service = new PhoneDetails();
+$service->render($phoneNumber,$format);
