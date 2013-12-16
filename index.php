@@ -1,7 +1,6 @@
 <?php
 
 class PhoneDetails {
-
     /**
      * Database configuration
      */
@@ -13,6 +12,9 @@ class PhoneDetails {
     public function render($strPhoneNumber, $format = 'html') {
         if (empty($strPhoneNumber))
             return $this->sendData($this->getCompletePhoneDetailes());
+        else {
+            
+        
         $countryCode = substr($strPhoneNumber, 0, 2);
         // Determine region name by the 3rd digit
         $regionCode = substr($strPhoneNumber, 2, 1);
@@ -65,19 +67,22 @@ class PhoneDetails {
             }
         }
         $this->sendData($output, $format);
+        }
     }
 
     private function sendData($data, $format = 'html') {
         // Determine the format needed and generate
-        //var_dump($data);
         switch ($format) {
             case 'html':
                 $out = $table= '';
                 if (count($data, COUNT_RECURSIVE)/count($data)>1){
+                    $table.="<caption style = 'font-size: 2em'>Monthly savings</caption>";
+                    $table.="<tr><th>Phone Number</th><th>Status</th><th>Telco</th><th>Customer Name</th><th>Last Payment Date</th><th>Last Payment Amount</th> <th>Links</th></tr>";
                     foreach ($data as $row){
                         $table.='<tr>';
                         foreach ($row as $item)
                             $table.="<td>$item</td>";
+                        $table.="<td><a href = '?phone_number=".$row['phone_number']."&format=html'>html</a>  <a href = '?phone_number=".$row['phone_number']."&format=json'>json</a></td>";
                         $table.='</tr>';
                 }}
                 else{
@@ -85,57 +90,56 @@ class PhoneDetails {
                         $out.= '<div>' . $this->ucwString($key) . ": $value" . '</div>' . PHP_EOL;
                 }
                 $html = "
-<!DOCTYPE html>
-<html>
-    <head>
-        <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css'>
-        <meta charset='UTF-8'>
-        <title>Phone Details</title>
-        <style>
-            .jumbotron{
-                text-align:center;
-            }
-            .col-md-4>div{
-                font-size: 1.5em;
-            }
-        </style>
-    </head>
-    <body>
-        <div class='jumbotron'>
-            <h1>Phone Detailes</h1>
-        </div>
-        <div class='container'>
-            <div class='col-md-4'>&nbsp;</div>
-            <div class='col-md-4'>
-                " . $out . "
-                <h2>New request:</h2>                  
-                <form action=''>
-                    <input type='text' name='phone_number' class='form-control' placeholder='Type phone number'>
-                    <div class='radio'>
-                        <label>
-                            <input type='radio' name='format' id='optionsRadios1' value='html' checked>
-                            HTML
-                        </label>
-                    </div>
-                    <div class='radio'>
-                        <label>
-                            <input type='radio' name='format' id='optionsRadios2' value='json'>
-                            JSON
-                        </label>
-                    </div>
-                    <button type='submit' class='btn btn-default'>Submit</button>
-                </form>
-            </div>
-            <div class='col-md-4'>&nbsp;</div>
-            <div class='col-md-12'>
-                <table class='table'>
-                ".$table."
-                </table>
-            
-            </div>
-        </div>
-    </body>
-</html>";
+                    <!DOCTYPE html>
+                    <html>
+                        <head>
+                            <link rel='stylesheet' href='//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css'>
+                            <meta charset='UTF-8'>
+                            <title>Phone Details</title>
+                            <style>
+                                .jumbotron{
+                                    text-align:center;
+                                }
+                                .col-md-4>div{
+                                    font-size: 1.5em;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class='jumbotron'>
+                                <h1>Phone Detailes</h1>
+                            </div>
+                            <div class='container'>
+                                <div class='col-md-4'>&nbsp;</div>
+                                <div class='col-md-4'>
+                                    " . $out . "
+                                    <h2>New request:</h2>                  
+                                    <form action=''>
+                                        <input type='text' name='phone_number' class='form-control' placeholder='Type phone number'>
+                                        <div class='radio'>
+                                            <label>
+                                                <input type='radio' name='format' id='optionsRadios1' value='html' checked>
+                                                HTML
+                                            </label>
+                                        </div>
+                                        <div class='radio'>
+                                            <label>
+                                                <input type='radio' name='format' id='optionsRadios2' value='json'>
+                                                JSON
+                                            </label>
+                                        </div>
+                                        <button type='submit' class='btn btn-default'>Submit</button>
+                                    </form>
+                                </div>
+                                <div class='col-md-4'>&nbsp;</div>
+                                <div class='col-md-12'>
+                                    <table class='table table-hover'>
+                                    ".$table."
+                                    </table>
+                                </div>
+                            </div>
+                        </body>
+                    </html>";
                 echo $html;
                 break;
             case 'json':
@@ -145,11 +149,16 @@ class PhoneDetails {
     }
 
     private function getPhoneDetailesByPhoneNumber($phoneNumber) {
+        try{
         $db = $this->getDb();
         $stmt = $db->prepare('SELECT `phone_number`,`status`, `telco` from `phone_details`
                 WHERE `phone_number` = :phone_number');
         $stmt->bindParam(':phone_number', $phoneNumber, PDO::PARAM_STR);
         $stmt->execute();
+        }catch (PDOException $e) {
+            echo $e->getMessage();
+            die();
+        }
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -171,7 +180,7 @@ class PhoneDetails {
               PRIMARY KEY (`phone_number`)
             );
             DELETE FROM `phone_details`;
-            INSERT INTO `phone_details` (`phone_number`, `status`, `telco`, `customer_name`, `last_payment_date`, `last_payment_amount`) VALUES('60165586780',        100,    'DIGI', 'Benjamin Law', '2013-09-18',   100.5555555765);
+            INSERT INTO `phone_details` (`phone_number`, `status`, `telco`, `customer_name`, `last_payment_date`, `last_payment_amount`) VALUES('60165586780',        100,    'DIGI', 'Benjamin Law', '2013-09-18',   100.55);
             INSERT INTO `phone_details` (`phone_number`, `status`, `telco`, `customer_name`, `last_payment_date`, `last_payment_amount`) VALUES('60123691200',        101,    'MAXIS',        'Peter Tan',    '2013-09-18',   25);
             INSERT INTO `phone_details` (`phone_number`, `status`, `telco`, `customer_name`, `last_payment_date`, `last_payment_amount`) VALUES('60198550000',        100,    'CELCOM',       'Abdullah Hukum',       '2013-09-18',   50);
             INSERT INTO `phone_details` (`phone_number`, `status`, `telco`, `customer_name`, `last_payment_date`, `last_payment_amount`) VALUES('6527508888',         100,    'SINGTEL',      'Richard Ooi',  '2013-09-18',   60);";
@@ -188,10 +197,15 @@ class PhoneDetails {
         }
     }
     private function getCompletePhoneDetailes(){
+        try{
         $db= $this->getDb();
         $q = "SELECT * from `phone_details`";
         $res = $db->query($q);
         $result = $res->fetchAll(PDO::FETCH_ASSOC);
+        }catch (PDOException $e) {
+            echo $e->getMessage();
+            die();
+        }
         return $result;
     }
 
@@ -212,6 +226,6 @@ class PhoneDetails {
 //Sanitize PN (digits only)
 $phoneNumber = (isset($_GET['phone_number'])) ? filter_var($_GET['phone_number'], FILTER_VALIDATE_REGEXP, array("options" => array("regexp" => "/^\d+$/"))) : null;
 //Sanitize format ('html' or 'json')
-$format = (isset($_GET['format'])) ? filter_var($_GET['format'], FILTER_VALIDATE_REGEXP, array("options" => array("regexp" => "/^(html|json)$/"))) : null;
+$format = (isset($_GET['format'])) ? filter_var($_GET['format'], FILTER_VALIDATE_REGEXP, array("options" => array("regexp" => "/^(html|json)$/"))) : 'html';
 $service = new PhoneDetails();
 $service->render($phoneNumber, $format);
